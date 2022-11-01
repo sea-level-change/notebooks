@@ -1,0 +1,14 @@
+name: slcp_notebook
+channels:
+  - conda-forge
+dependencies:
+  - python=3.7.12
+  - notebook
+  - ipykernel
+  - cartopy
+  - matplotlib
+  - numpy
+  - pandas
+  - requests
+  - shapely
+  - xarray

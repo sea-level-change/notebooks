@@ -28,7 +28,7 @@ def search_inventory(df: pd.DataFrame, col: str, term: str) -> List[str]:
         return f'Search term "{term}" not found in inventory {col}s'
 
 
-def prep_ts(ts_json: dict, proc: List[Callable] = []) -> xr.DataArray:
+def prep_ts(ts_json: dict, procs: List[Callable] = []) -> xr.DataArray:
     """
     Generates Xarray DataArray object from timeSeriesSpark algorithm results
 
@@ -40,16 +40,17 @@ def prep_ts(ts_json: dict, proc: List[Callable] = []) -> xr.DataArray:
     shortname = ts_json['meta'][0]['shortName']
     time = np.array([np.datetime64(ts[0]["iso_time"][:10])
                     for ts in ts_json["data"]])
-    vals = np.array([ts[0]["mean"] for ts in ts_json["data"]])
+    das = []
+    for var in ['mean', 'meanSeasonal']:
+        vals = np.array([ts[0][var] for ts in ts_json["data"]])
+        da = xr.DataArray(vals, coords=[time], dims=['time'], name=var)
+        for proc in procs:
+            da = proc(da)
+        da.attrs['shortname'] = shortname
+        das.append(da)
 
-    da = xr.DataArray(vals, coords=[time], dims=['time'])
-
-    for proc in proc:
-        da = proc(da)
-
-    da.attrs['shortname'] = shortname
-
-    return da
+    ds = xr.merge(das)
+    return ds
 
 
 def prep_avg_map(var_json: dict, units: str = '') -> xr.DataArray:
@@ -255,16 +256,6 @@ def ecco_theta(da):
     da_clim_anom = da_a.groupby("time.month") - da_clim
     da_clim_anom_ra = da_clim_anom.rolling(time=3, center=True).mean()
     return da_clim_anom_ra
-
-
-def calc_clim(da: xr.DataArray):
-    return da.groupby("time.month").mean("time")
-
-
-def calc_clim_anoms(da: xr.DataArray) -> xr.DataArray:
-    clim_anoms = da.groupby("time.month") - calc_clim(da)
-    clim_anoms.attrs = da.attrs
-    return clim_anoms
 
 
 def rolling_avg(da: xr.DataArray, time: int = 3) -> xr.DataArray:

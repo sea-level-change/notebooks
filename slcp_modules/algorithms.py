@@ -18,7 +18,9 @@ def spatial_mean(base_url, dataset, bb, start_time, end_time):
         'maxLon': bb['max_lon'],
         'maxLat': bb['max_lat'],
         'startTime': start_time.strftime(dt_format),
-        'endTime': end_time.strftime(dt_format)
+        'endTime': end_time.strftime(dt_format),
+        'lowPassFilter': False,
+        'seasonalFilter': True
     }
     url = f'{base_url}/timeSeriesSpark'
 

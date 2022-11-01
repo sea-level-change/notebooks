@@ -1,4 +1,4 @@
-import modules.processing as processing
+import slcp_modules.processing as processing
 from matplotlib.patches import Polygon
 import xarray as xr
 import pandas as pd
